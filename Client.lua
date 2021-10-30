@@ -22,7 +22,7 @@ function GetBearing(A,B)
 end
 
 function SpawnChristine()
-    local Player = GetPlayerPed()
+    local Player = PlayerPedId()
     local PlayerPosition = GetEntityCoords(Player)
     local PlayerHeading = GetEntityHeading(Player)
     local Success, NodePosition = GetNthClosestVehicleNode(PlayerPosition[1], PlayerPosition[2], PlayerPosition[3], 10, 1, 0, 0)
@@ -82,7 +82,10 @@ function SpawnChristine()
             SetBlockingOfNonTemporaryEvents(Driver, true)
             SetPedKeepTask(Driver, true)
             TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
-            --AddBlipForEntity(Christine)
+            local Blip = AddBlipForEntity(Christine)
+            BeginTextCommandSetBlipName("Christine")
+            --AddTextComponentSubstringPlayerName('me')
+            EndTextCommandSetBlipName(Blip)
 
             SetModelAsNoLongerNeeded("TORNADO5")
             SetModelAsNoLongerNeeded("S_M_Y_ROBBER_01")
@@ -107,11 +110,11 @@ AddEventHandler("gameEventTriggered", function (Name, Args)
     if Name == "CEventNetworkEntityDamage" and Christine then
         if Args[2] == Driver then
             if Args[6] == true then
-                StopEntityFire(GetPlayerPed())
+                StopEntityFire(PlayerPedId())
             end
-            if not IsEntityOnFire(GetPlayerPed()) then
+            if not IsEntityOnFire(PlayerPedId()) then
                 --print(Args[2],Driver)
-                StartEntityFire(GetPlayerPed())
+                StartEntityFire(PlayerPedId())
             end
         end
     end
@@ -124,12 +127,14 @@ Citizen.CreateThread(function()
             RequestNamedPtfxAsset("scr_tn_phantom")
         end
         if Spawned then
-            local Player = GetPlayerPed()
+            local Player = PlayerPedId()
             if GetEntityHealth(Christine) <= 0 and CanSpawn then
+                print(CanSpawn, 2)
                 DespawnChristine()
                 CanSpawn = false
             end
             if GetEntityHealth(Player) <= 0 and CanSpawn then
+                print(CanSpawn,1)
                 DespawnChristine()
                 CanSpawn = false
             end
@@ -162,6 +167,7 @@ Citizen.CreateThread(function()
             SpawnChristine()
         end
         if GetTimeDifference(GetClockHours(),5) == 0 and Spawned then
+            print(Spawned,3)
             DespawnChristine()
         end
         if GetTimeDifference(GetClockHours(),5) == 0 and not CanSpawn then
