@@ -6,3 +6,4 @@ description "Ghost Car Halloween Event From GTA Online"
 version "1.0.0"
 
 client_script "Client.lua"
+server_script "Server.lua"

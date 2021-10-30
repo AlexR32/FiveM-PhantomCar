@@ -31,7 +31,7 @@ function SpawnChristine()
             --print("Spawning Christine", NodePosition)
             Spawned = true
             Angered = false
-            Christine = CreateVehicle(LoadModel("TORNADO5"), NodePosition, math.abs(math.fmod(GetBearing(NodePosition,PlayerPosition) + 180 - 180,360) - 180), false, false)
+            Christine = CreateVehicle(LoadModel("TORNADO5"), NodePosition, math.abs(math.fmod(GetBearing(NodePosition,PlayerPosition) + 180 - 180,360) - 180), true, false)
             RequestScriptAudioBank("DLC_TUNER/DLC_Tuner_Phantom_Car", false, -1)
             PlaySoundFromEntity(-1,"Spawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
             TriggerMusicEvent("H21_PC_START_MUSIC")
@@ -64,7 +64,7 @@ function SpawnChristine()
             SetVehicleNumberPlateTextIndex(Christine, 1)
             SetVehicleNumberPlateText(Christine, "EAB__211")
 
-            Driver = CreatePedInsideVehicle(Christine, 26, LoadModel("S_M_Y_ROBBER_01"), -1, false, false)
+            Driver = CreatePedInsideVehicle(Christine, 26, LoadModel("S_M_Y_ROBBER_01"), -1, true, false)
 
             SetEntityAlpha(Driver, 0, false)
             SetEntityVisible(Driver, false, false)
@@ -82,9 +82,10 @@ function SpawnChristine()
             SetBlockingOfNonTemporaryEvents(Driver, true)
             SetPedKeepTask(Driver, true)
             TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
+
             local Blip = AddBlipForEntity(Christine)
-            BeginTextCommandSetBlipName("Christine")
-            --AddTextComponentSubstringPlayerName('me')
+            BeginTextCommandSetBlipName("STRING")
+            AddTextComponentSubstringPlayerName("Christine")
             EndTextCommandSetBlipName(Blip)
 
             SetModelAsNoLongerNeeded("TORNADO5")
@@ -98,7 +99,7 @@ function DespawnChristine()
     --NetworkFadeOutEntity(Christine,false,true) -- not working idk why
     PlaySoundFromEntity(-1,"Despawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
     TriggerMusicEvent("H21_PC_STOP_MUSIC")
-    Citizen.Wait(5000)
+    Citizen.Wait(2000)
     DeleteEntity(Christine)
     DeleteEntity(Driver)
     Spawned = false
@@ -108,17 +109,22 @@ end
 
 AddEventHandler("gameEventTriggered", function (Name, Args)
     if Name == "CEventNetworkEntityDamage" and Christine then
-        if Args[2] == Driver then
+        if Args[2] == Driver and Angered then
             if Args[6] == true then
                 StopEntityFire(PlayerPedId())
             end
             if not IsEntityOnFire(PlayerPedId()) then
-                --print(Args[2],Driver)
                 StartEntityFire(PlayerPedId())
             end
         end
     end
 end)
+
+RegisterNetEvent("PC:SpawnClient")
+AddEventHandler("PC:SpawnClient", function()
+    SpawnChristine()
+end)
+
 
 Citizen.CreateThread(function()
     while true do
@@ -128,18 +134,18 @@ Citizen.CreateThread(function()
         end
         if Spawned then
             local Player = PlayerPedId()
-            if GetEntityHealth(Christine) <= 0 and CanSpawn then
-                print(CanSpawn, 2)
+            if IsEntityDead(Christine) and CanSpawn then
+                --print(CanSpawn, 2)
                 DespawnChristine()
                 CanSpawn = false
             end
-            if GetEntityHealth(Player) <= 0 and CanSpawn then
-                print(CanSpawn,1)
+            if IsEntityDead(Player) and CanSpawn then
+                --print(CanSpawn,1)
                 DespawnChristine()
                 CanSpawn = false
             end
             --print(Angered)
-            if not IsPedSittingInAnyVehicle(Player, false) and not Angered then
+            if not IsPedInAnyVehicle(Player, false) and not Angered then
                 Angered = true
                 UseParticleFxAsset("scr_tn_phantom")
                 FlamesFX = StartNetworkedParticleFxLoopedOnEntity("scr_tn_phantom_flames", Christine, 0.0, 0.0, 0.0, 0.0, 0.0, 180.0, 1.0, false, true, false, 1065353216, 1065353216, 1065353216, 0)
@@ -147,7 +153,7 @@ Citizen.CreateThread(function()
                 TaskVehicleFollow(Driver, Christine, Player, 30.0, 262656, 0)
                 PlaySoundFromEntity(-1,"Flames_Loop",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
                 PlaySoundFrontend(-1,"Spawn_FE","DLC_Tuner_Halloween_Phantom_Car_Sounds", true)
-            elseif IsPedSittingInAnyVehicle(Player, false) and Angered then
+            elseif IsPedInAnyVehicle(Player, false) and Angered then
                 Angered = false
                 StopSound(0)
                 ReleaseSoundId(0)
@@ -161,13 +167,14 @@ end)
 
 Citizen.CreateThread(function()
     while true do
-        Citizen.Wait(0)
+        Citizen.Wait(1000)
         --print(GetTimeDifference(GetClockHours(),21),GetTimeDifference(GetClockHours(),5))
         if GetTimeDifference(GetClockHours(),21) == 0 and not Spawned and CanSpawn then
-            SpawnChristine()
+            TriggerServerEvent("PC:SpawnServer")
+            --SpawnChristine()
         end
         if GetTimeDifference(GetClockHours(),5) == 0 and Spawned then
-            print(Spawned,3)
+            --print(Spawned,3)
             DespawnChristine()
         end
         if GetTimeDifference(GetClockHours(),5) == 0 and not CanSpawn then
