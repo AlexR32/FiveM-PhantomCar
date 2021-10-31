@@ -29,7 +29,6 @@ function SpawnChristine()
     local Success, NodePosition = GetNthClosestVehicleNode(PlayerPosition[1], PlayerPosition[2], PlayerPosition[3], 10, 1, 0, 0)
     if not Christine and not Driver then
         if Success then
-            --print("Spawning Christine", NodePosition)
             Spawned = true
             Angered = false
             Christine = CreateVehicle(LoadModel("TORNADO5"), NodePosition, math.abs(math.fmod(GetBearing(NodePosition,PlayerPosition) + 180 - 180,360) - 180), true, false)
@@ -37,7 +36,7 @@ function SpawnChristine()
             PlaySoundFromEntity(-1,"Spawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
             TriggerMusicEvent("H21_PC_START_MUSIC")
 
-            NetworkFadeInEntity(Christine, false, true) -- not working idk why
+            NetworkFadeInEntity(Christine, false, true)
             local Health = GetEntityMaxHealth(Christine) * 5
             SetEntityMaxHealth(Christine,Health)
             SetEntityHealth(Christine,Health,0)
@@ -65,7 +64,7 @@ function SpawnChristine()
             SetVehicleNumberPlateTextIndex(Christine, 1)
             SetVehicleNumberPlateText(Christine, "EAB__211")
 
-            Driver = CreatePedInsideVehicle(Christine, 26, LoadModel("S_M_Y_ROBBER_01"), -1, true, false)
+            Driver = CreatePedInsideVehicle(Christine, 26, LoadModel("S_M_Y_ROBBER_01"), -1, false, false)
 
             SetEntityAlpha(Driver, 0, false)
             SetEntityVisible(Driver, false, false)
@@ -97,7 +96,7 @@ function SpawnChristine()
 end
 
 function DespawnChristine()
-    NetworkFadeOutEntity(Christine,false,true) -- not working idk why
+    NetworkFadeOutEntity(Christine,false,true)
     PlaySoundFromEntity(-1,"Despawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
     TriggerMusicEvent("H21_PC_STOP_MUSIC")
     Citizen.Wait(1000)
@@ -110,7 +109,6 @@ end
 
 AddEventHandler("gameEventTriggered", function (Name, Args)
     if Name == "CEventNetworkEntityDamage" and Driver then
-        print(Driver, Args[2])
         if Args[2] == Driver and Angered then
             if Args[6] == true then
                 StopEntityFire(PlayerPedId())
@@ -136,17 +134,15 @@ Citizen.CreateThread(function()
         end
         if Spawned then
             local Player = PlayerPedId()
-            if IsEntityDead(Christine) and CanSpawn then
-                --print(CanSpawn, 2)
+            if GetVehicleBodyHealth(Christine) <= 0 and CanSpawn then
+                print(Christine, CanSpawn)
                 DespawnChristine()
                 CanSpawn = false
             end
             if IsEntityDead(Player) and CanSpawn then
-                --print(CanSpawn,1)
                 DespawnChristine()
                 CanSpawn = false
             end
-            --print(Angered)
             if not IsPedInAnyVehicle(Player, false) and not Angered then
                 Angered = true
                 UseParticleFxAsset("scr_tn_phantom")
@@ -171,13 +167,11 @@ end)
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(1000)
-        --print(GetTimeDifference(GetClockHours(),21),GetTimeDifference(GetClockHours(),5))
         if GetTimeDifference(GetClockHours(),21) == 0 and not Spawned and CanSpawn then
             TriggerServerEvent("PC:SpawnServer")
             --SpawnChristine()
         end
         if GetTimeDifference(GetClockHours(),5) == 0 and Spawned then
-            --print(Spawned,3)
             DespawnChristine()
         end
         if GetTimeDifference(GetClockHours(),5) == 0 and not CanSpawn then
