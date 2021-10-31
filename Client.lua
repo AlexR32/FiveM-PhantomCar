@@ -1,7 +1,7 @@
 -- Brain Vars
 local CanSpawn = true
 local Spawned = false
-local Angered = false
+local Angry = false
 
 -- Entity Vars
 local Christine = nil
@@ -30,7 +30,7 @@ function SpawnChristine()
     if not Christine and not Driver then
         if Success then
             Spawned = true
-            Angered = false
+            Angry = false
             Christine = CreateVehicle(LoadModel("TORNADO5"), NodePosition, math.abs(math.fmod(GetBearing(NodePosition,PlayerPosition) + 180 - 180,360) - 180), true, false)
             RequestScriptAudioBank("DLC_TUNER/DLC_Tuner_Phantom_Car", false, -1)
             PlaySoundFromEntity(-1,"Spawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
@@ -77,7 +77,7 @@ function SpawnChristine()
             SetPedConfigFlag(Driver, 430, true)
             SetPedConfigFlag(Driver, 42, true)
             DisablePedPainAudio(Driver, true)
-            N_0xab6781a5f3101470(Driver, 1)
+            N_0xab6781a5f3101470(Driver, 1) -- from decompiled script, i dont know what its doing
             SetPedCanBeTargetted(Driver, false)
             SetBlockingOfNonTemporaryEvents(Driver, true)
             SetPedKeepTask(Driver, true)
@@ -109,7 +109,7 @@ end
 
 AddEventHandler("gameEventTriggered", function (Name, Args)
     if Name == "CEventNetworkEntityDamage" and Driver then
-        if Args[2] == Driver and Angered then
+        if Args[2] == Driver and Angry then
             if Args[6] == true then
                 StopEntityFire(PlayerPedId())
             end
@@ -143,8 +143,8 @@ Citizen.CreateThread(function()
                 DespawnChristine()
                 CanSpawn = false
             end
-            if not IsPedInAnyVehicle(Player, false) and not Angered then
-                Angered = true
+            if not IsPedSittingInAnyVehicle(Player) and not Angry then
+                Angry = true
                 UseParticleFxAsset("scr_tn_phantom")
                 FlamesFX = StartNetworkedParticleFxLoopedOnEntity("scr_tn_phantom_flames", Christine, 0.0, 0.0, 0.0, 0.0, 0.0, 180.0, 1.0, false, true, false, 1065353216, 1065353216, 1065353216, 0)
                 ToggleVehicleMod(Christine, 22, true)
@@ -152,8 +152,8 @@ Citizen.CreateThread(function()
                 FlamesSoundId = GetSoundId()
                 PlaySoundFromEntity(FlamesSoundId,"Flames_Loop",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
                 PlaySoundFrontend(-1,"Spawn_FE","DLC_Tuner_Halloween_Phantom_Car_Sounds", true)
-            elseif IsPedInAnyVehicle(Player, false) and Angered then
-                Angered = false
+            elseif IsPedSittingInAnyVehicle(Player) and Angry then
+                Angry = false
                 StopSound(FlamesSoundId)
                 ReleaseSoundId(FlamesSoundId)
                 StopParticleFxLooped(FlamesFX,true)
