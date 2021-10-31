@@ -8,6 +8,7 @@ local Christine = nil
 local Driver = nil
 local FlamesFX = nil
 local FlamesSoundId = nil
+local Brip = nil
 
 function LoadModel(ModelHash)
     if not IsModelInCdimage(ModelHash) then return end
@@ -83,7 +84,7 @@ function SpawnChristine()
             SetPedKeepTask(Driver, true)
             TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
 
-            local Blip = AddBlipForEntity(Christine)
+            Blip = AddBlipForEntity(Christine)
             BeginTextCommandSetBlipName("STRING")
             AddTextComponentSubstringPlayerName("Christine")
             EndTextCommandSetBlipName(Blip)
@@ -100,6 +101,7 @@ function DespawnChristine()
     PlaySoundFromEntity(-1,"Despawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
     TriggerMusicEvent("H21_PC_STOP_MUSIC")
     Citizen.Wait(1000)
+    RemoveBlip(Blip)
     DeleteEntity(Christine)
     DeleteEntity(Driver)
     Spawned = false
@@ -135,7 +137,6 @@ Citizen.CreateThread(function()
         if Spawned then
             local Player = PlayerPedId()
             if GetVehicleBodyHealth(Christine) <= 0 and CanSpawn then
-                print(Christine, CanSpawn)
                 DespawnChristine()
                 CanSpawn = false
             end
