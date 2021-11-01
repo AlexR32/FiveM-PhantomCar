@@ -31,7 +31,7 @@ function SpawnChristine()
     if not Christine and not Driver then
         if Success then
             Spawned = true
-            Angry = false
+            Angry = IsPedSittingInAnyVehicle(Player)
             Christine = CreateVehicle(LoadModel("TORNADO5"), NodePosition, math.abs(math.fmod(GetBearing(NodePosition,PlayerPosition) + 180 - 180,360) - 180), true, false)
             RequestScriptAudioBank("DLC_TUNER/DLC_Tuner_Phantom_Car", false, -1)
             PlaySoundFromEntity(-1,"Spawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
@@ -109,7 +109,7 @@ function DespawnChristine()
     Driver = nil
 end
 
-AddEventHandler("gameEventTriggered", function (Name, Args)
+AddEventHandler("gameEventTriggered", function(Name, Args)
     if Name == "CEventNetworkEntityDamage" and Driver then
         if Args[2] == Driver and Angry then
             if Args[6] == true then
@@ -131,11 +131,11 @@ end)
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
-        if not HasNamedPtfxAssetLoaded("scr_tn_phantom") then
-            RequestNamedPtfxAsset("scr_tn_phantom")
-        end
-        if Spawned then
+        if Spawned and Christine and Driver then
             local Player = PlayerPedId()
+            if not HasNamedPtfxAssetLoaded("scr_tn_phantom") then
+                RequestNamedPtfxAsset("scr_tn_phantom")
+            end
             if GetVehicleBodyHealth(Christine) <= 0 and CanSpawn then
                 DespawnChristine()
                 CanSpawn = false
@@ -145,19 +145,19 @@ Citizen.CreateThread(function()
                 CanSpawn = false
             end
             if not IsPedSittingInAnyVehicle(Player) and not Angry then
-                Angry = true
                 ToggleVehicleMod(Christine, 22, true)
                 TaskVehicleFollow(Driver, Christine, Player, 30.0, 262656, 0)
-
+                Angry = true
+                
                 UseParticleFxAsset("scr_tn_phantom")
                 FlamesFX = StartNetworkedParticleFxLoopedOnEntity("scr_tn_phantom_flames", Christine, 0.0, 0.0, 0.0, 0.0, 0.0, 180.0, 1.0, false, true, false, 1065353216, 1065353216, 1065353216, 0)
                 FlamesSoundId = GetSoundId()
                 PlaySoundFromEntity(FlamesSoundId,"Flames_Loop",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
                 PlaySoundFrontend(-1,"Spawn_FE","DLC_Tuner_Halloween_Phantom_Car_Sounds", true)
             elseif IsPedSittingInAnyVehicle(Player) and Angry then
-                Angry = false
                 ToggleVehicleMod(Christine, 22, false)
                 TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
+                Angry = false
 
                 StopSound(FlamesSoundId)
                 ReleaseSoundId(FlamesSoundId)
