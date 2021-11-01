@@ -82,7 +82,7 @@ function SpawnChristine()
             SetPedCanBeTargetted(Driver, false)
             SetBlockingOfNonTemporaryEvents(Driver, true)
             SetPedKeepTask(Driver, true)
-            TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
+            --TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
 
             Blip = AddBlipForEntity(Christine)
             BeginTextCommandSetBlipName("STRING")
@@ -146,20 +146,22 @@ Citizen.CreateThread(function()
             end
             if not IsPedSittingInAnyVehicle(Player) and not Angry then
                 Angry = true
-                UseParticleFxAsset("scr_tn_phantom")
-                FlamesFX = StartNetworkedParticleFxLoopedOnEntity("scr_tn_phantom_flames", Christine, 0.0, 0.0, 0.0, 0.0, 0.0, 180.0, 1.0, false, true, false, 1065353216, 1065353216, 1065353216, 0)
                 ToggleVehicleMod(Christine, 22, true)
                 TaskVehicleFollow(Driver, Christine, Player, 30.0, 262656, 0)
+
+                UseParticleFxAsset("scr_tn_phantom")
+                FlamesFX = StartNetworkedParticleFxLoopedOnEntity("scr_tn_phantom_flames", Christine, 0.0, 0.0, 0.0, 0.0, 0.0, 180.0, 1.0, false, true, false, 1065353216, 1065353216, 1065353216, 0)
                 FlamesSoundId = GetSoundId()
                 PlaySoundFromEntity(FlamesSoundId,"Flames_Loop",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
                 PlaySoundFrontend(-1,"Spawn_FE","DLC_Tuner_Halloween_Phantom_Car_Sounds", true)
             elseif IsPedSittingInAnyVehicle(Player) and Angry then
                 Angry = false
+                ToggleVehicleMod(Christine, 22, false)
+                TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
+
                 StopSound(FlamesSoundId)
                 ReleaseSoundId(FlamesSoundId)
                 StopParticleFxLooped(FlamesFX,true)
-                ToggleVehicleMod(Christine, 22, false)
-                TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
             end
         end
     end
