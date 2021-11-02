@@ -1,5 +1,11 @@
 RegisterNetEvent("PC:SpawnServer")
 AddEventHandler("PC:SpawnServer", function()
-    --print("Spawning Christine for players")
+    print("Spawning Christine for player with id ", source)
     TriggerClientEvent("PC:SpawnClient", source)
+end)
+
+RegisterNetEvent("PC:DespawnServer")
+AddEventHandler("PC:DespawnServer", function()
+    print("Despawning Christine for player with id ", source)
+    TriggerClientEvent("PC:DespawnClient", source)
 end)
