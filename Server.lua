@@ -5,7 +5,7 @@ AddEventHandler("PC:SpawnServer", function()
 end)
 
 RegisterNetEvent("PC:DespawnServer")
-AddEventHandler("PC:DespawnServer", function()
+AddEventHandler("PC:DespawnServer", function(Christine, Driver)
     print("Despawning Christine for player with id ", source)
     TriggerClientEvent("PC:DespawnClient", source)
 end)

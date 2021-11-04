@@ -30,10 +30,9 @@ function SpawnChristine()
     local PlayerHeading = GetEntityHeading(Player)
     local Success, NodePosition = GetNthClosestVehicleNode(PlayerPosition[1], PlayerPosition[2], PlayerPosition[3], 10, 1, 0, 0)
     if not Christine and not Driver and Success then
-        --Christine = CreateVehicle(LoadModel("TORNADO5"), NodePosition, math.abs(math.fmod(GetBearing(NodePosition,PlayerPosition) + 180 - 180,360) - 180), true, false)
         Christine = CreateVehicle(LoadModel("TORNADO5"), NodePosition, GetBearing(NodePosition,PlayerPosition), true, false)
         RequestScriptAudioBank("DLC_TUNER/DLC_Tuner_Phantom_Car", false, -1)
-        PlaySoundFromEntity(-1,"Spawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
+        PlaySoundFromEntity(-1,"Spawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", false, false)
         TriggerMusicEvent("H21_PC_START_MUSIC")
 
         NetworkFadeInEntity(Christine, false, true)
@@ -65,7 +64,8 @@ function SpawnChristine()
         SetVehicleNumberPlateText(Christine, "EAB__211")
 
         Driver = CreatePedInsideVehicle(Christine, 26, LoadModel("S_M_Y_ROBBER_01"), -1, false, false)
-        SetEntityAlpha(Driver, 0, false)
+        SetEntityAlpha(Driver, 0, true)
+        --NetworkSetEntityGhostedWithOwner(Driver, false)
         SetEntityVisible(Driver, false, false)
         SetPedCombatAttributes(Driver, 3, false)
         SetEntityProofs(Driver, false, true, false, false, false, false, false, false)
@@ -80,14 +80,13 @@ function SpawnChristine()
         SetPedCanBeTargetted(Driver, false)
         SetBlockingOfNonTemporaryEvents(Driver, true)
         SetPedKeepTask(Driver, true)
-        --TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
 
+        --NetworkFadeOutEntity(Driver, false, false)
         Blip = AddBlipForEntity(Christine)
         BeginTextCommandSetBlipName("STRING")
         AddTextComponentSubstringPlayerName("Christine")
         EndTextCommandSetBlipName(Blip)
 
-        Spawned = true
         Angry = IsPedSittingInAnyVehicle(Player)
         SetModelAsNoLongerNeeded("TORNADO5")
         SetModelAsNoLongerNeeded("S_M_Y_ROBBER_01")
@@ -95,9 +94,9 @@ function SpawnChristine()
 end
 
 function DespawnChristine()
-    if Christine and Driver and Blip then
+    if Christine and Driver then
         NetworkFadeOutEntity(Christine,false,true)
-        PlaySoundFromEntity(-1,"Despawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
+        PlaySoundFromEntity(-1,"Despawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", false, false)
         TriggerMusicEvent("H21_PC_STOP_MUSIC")
         Citizen.Wait(1000)
         RemoveBlip(Blip)
@@ -139,17 +138,21 @@ Citizen.CreateThread(function()
         if not HasNamedPtfxAssetLoaded("scr_tn_phantom") then
             RequestNamedPtfxAsset("scr_tn_phantom")
         end
-        if Spawned then
+        if Christine and Driver then
             local Player = PlayerPedId()
             if GetVehicleBodyHealth(Christine) <= 0 and CanSpawn then
                 TriggerServerEvent("PC:DespawnServer")
-                --DespawnChristine()
                 CanSpawn = false
             end
             if IsEntityDead(Player) and CanSpawn then
                 TriggerServerEvent("PC:DespawnServer")
-                --DespawnChristine()
                 CanSpawn = false
+            end
+            if not Blip then
+                Blip = AddBlipForEntity(Christine)
+                BeginTextCommandSetBlipName("STRING")
+                AddTextComponentSubstringPlayerName("Christine")
+                EndTextCommandSetBlipName(Blip)
             end
             if not IsPedSittingInAnyVehicle(Player) and not Angry then
                 ToggleVehicleMod(Christine, 22, true)
@@ -177,13 +180,11 @@ end)
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(2000)
-        if GetTimeDifference(GetClockHours(),21) == 0 and not Spawned and CanSpawn then
+        if GetTimeDifference(GetClockHours(),21) == 0 and not Christine and CanSpawn then
             TriggerServerEvent("PC:SpawnServer")
-            --SpawnChristine()
         end
-        if GetTimeDifference(GetClockHours(),5) == 0 and Spawned then
+        if GetTimeDifference(GetClockHours(),5) == 0 and Christine then
             TriggerServerEvent("PC:DespawnServer")
-            --DespawnChristine()
         end
         if GetTimeDifference(GetClockHours(),5) == 0 and not CanSpawn then
             CanSpawn = true
