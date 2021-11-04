@@ -1,6 +1,6 @@
 -- Brain Vars
 local CanSpawn = true
-local Spawned = false
+local Destroyed = false
 local Angry = false
 
 -- Entity Vars
@@ -57,28 +57,16 @@ function SpawnChristine()
         SetVehicleRoofLivery(Christine, 0)
         SetVehicleMod(Christine, 23, 94, false)
         SetVehicleMod(Christine, 10, -1, false)
-        --SetVehicleDirtLevel(Christine, 3.0)
         SetVehicleWindowTint(Christine, 3)
         SetVehicleHeadlightsColour(Christine, 8)
         SetVehicleNumberPlateTextIndex(Christine, 1)
         SetVehicleNumberPlateText(Christine, "EAB__211")
 
-        Driver = CreatePedInsideVehicle(Christine, 26, LoadModel("S_M_Y_ROBBER_01"), -1, false, false)
-        SetEntityAlpha(Driver, 0, false)
-        SetEntityVisible(Driver, false, false)
-        SetPedCombatAttributes(Driver, 3, false)
-        SetEntityProofs(Driver, false, true, false, false, false, false, false, false)
+        Driver = CreatePedInsideVehicle(Christine, 26, LoadModel("S_M_Y_ROBBER_01"), -1, true, false)
+        Citizen.Wait(500)
+        SetEntityVisible(Driver, false)
         SetEntityInvincible(Driver, true)
-        SetPedConfigFlag(Driver, 109, true)
-        SetPedConfigFlag(Driver, 116, false)
-        SetPedConfigFlag(Driver, 118, false)
-        SetPedConfigFlag(Driver, 430, true)
-        SetPedConfigFlag(Driver, 42, true)
-        DisablePedPainAudio(Driver, true)
-        N_0xab6781a5f3101470(Driver, 1) -- from decompiled script, i dont know what its doing
-        SetPedCanBeTargetted(Driver, false)
         SetBlockingOfNonTemporaryEvents(Driver, true)
-        SetPedKeepTask(Driver, true)
 
         Blip = AddBlipForEntity(Christine)
         BeginTextCommandSetBlipName("STRING")
@@ -100,7 +88,6 @@ function DespawnChristine()
         RemoveBlip(Blip)
         DeleteEntity(Driver)
         DeleteEntity(Christine)
-        Spawned = false
         Christine = nil
         Driver = nil
         Blip = nil
@@ -139,24 +126,19 @@ Citizen.CreateThread(function()
         end
         if Christine and Driver then
             local Player = PlayerPedId()
-            if GetVehicleBodyHealth(Christine) <= 0 and CanSpawn then
+            if GetVehicleEngineHealth(Christine) <= 0 and not Destroyed then
+                Destroyed = true
                 TriggerServerEvent("PC:DespawnServer")
-                CanSpawn = false
             end
-            if IsEntityDead(Player) and CanSpawn then
+            if IsEntityDead(Player) and not Destroyed then
+                Destroyed = true
                 TriggerServerEvent("PC:DespawnServer")
-                CanSpawn = false
             end
-            if not Blip then
-                Blip = AddBlipForEntity(Christine)
-                BeginTextCommandSetBlipName("STRING")
-                AddTextComponentSubstringPlayerName("Christine")
-                EndTextCommandSetBlipName(Blip)
-            end
+
             if not IsPedSittingInAnyVehicle(Player) and not Angry then
+                Angry = true
                 ToggleVehicleMod(Christine, 22, true)
                 TaskVehicleFollow(Driver, Christine, Player, 30.0, 262656, 0)
-                Angry = true
                 
                 UseParticleFxAsset("scr_tn_phantom")
                 FlamesFX = StartParticleFxLoopedOnEntity("scr_tn_phantom_flames", Christine, 0.0, 0.0, 0.0, 0.0, 0.0, 180.0, 1.0, false, true, false)
@@ -164,9 +146,9 @@ Citizen.CreateThread(function()
                 PlaySoundFromEntity(FlamesSoundId,"Flames_Loop",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", false, false)
                 PlaySoundFrontend(-1,"Spawn_FE","DLC_Tuner_Halloween_Phantom_Car_Sounds", true)
             elseif IsPedSittingInAnyVehicle(Player) and Angry then
+                Angry = false
                 ToggleVehicleMod(Christine, 22, false)
                 TaskVehicleFollow(Driver, Christine, Player, 30.0, 786469, 20)
-                Angry = false
 
                 StopSound(FlamesSoundId)
                 ReleaseSoundId(FlamesSoundId)
@@ -179,14 +161,18 @@ end)
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(2000)
-        if GetTimeDifference(GetClockHours(),21) == 0 and not Christine and CanSpawn then
+        if GetTimeDifference(GetClockHours(),21) == 0 and CanSpawn then
+            CanSpawn = false
+            Destroyed = false
             TriggerServerEvent("PC:SpawnServer")
         end
-        if GetTimeDifference(GetClockHours(),5) == 0 and Christine then
-            TriggerServerEvent("PC:DespawnServer")
-        end
-        if GetTimeDifference(GetClockHours(),5) == 0 and not CanSpawn then
-            CanSpawn = true
+        if GetTimeDifference(GetClockHours(),5) == 0 then
+            if not CanSpawn and not Destroyed then
+                CanSpawn = true
+                TriggerServerEvent("PC:DespawnServer")
+            else
+                CanSpawn = true
+            end
         end
     end
 end)
