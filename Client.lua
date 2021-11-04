@@ -92,17 +92,18 @@ function SpawnChristine()
 end
 
 function DespawnChristine()
-    if Christine and Driver then
+    if Christine and Driver and Blip then
         NetworkFadeOutEntity(Christine,false,true)
         PlaySoundFromEntity(-1,"Despawn_In_Game",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", false, false)
         TriggerMusicEvent("H21_PC_STOP_MUSIC")
         Citizen.Wait(1000)
         RemoveBlip(Blip)
-        DeleteEntity(Christine)
         DeleteEntity(Driver)
+        DeleteEntity(Christine)
         Spawned = false
         Christine = nil
         Driver = nil
+        Blip = nil
     end
 end
 
@@ -158,9 +159,9 @@ Citizen.CreateThread(function()
                 Angry = true
                 
                 UseParticleFxAsset("scr_tn_phantom")
-                FlamesFX = StartNetworkedParticleFxLoopedOnEntity("scr_tn_phantom_flames", Christine, 0.0, 0.0, 0.0, 0.0, 0.0, 180.0, 1.0, false, true, false, 1065353216, 1065353216, 1065353216, 0)
+                FlamesFX = StartParticleFxLoopedOnEntity("scr_tn_phantom_flames", Christine, 0.0, 0.0, 0.0, 0.0, 0.0, 180.0, 1.0, false, true, false)
                 FlamesSoundId = GetSoundId()
-                PlaySoundFromEntity(FlamesSoundId,"Flames_Loop",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", true, false)
+                PlaySoundFromEntity(FlamesSoundId,"Flames_Loop",Christine,"DLC_Tuner_Halloween_Phantom_Car_Sounds", false, false)
                 PlaySoundFrontend(-1,"Spawn_FE","DLC_Tuner_Halloween_Phantom_Car_Sounds", true)
             elseif IsPedSittingInAnyVehicle(Player) and Angry then
                 ToggleVehicleMod(Christine, 22, false)
